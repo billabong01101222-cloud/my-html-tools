@@ -1,0 +1,107 @@
+import os
+import base64
+import tkinter as tk
+from tkinter import messagebox
+from github import Github, GithubException
+import qrcode
+from PIL import Image, ImageTk
+
+# ==========================================
+# ★ 設定情報（ご自身の情報に書き換えてください）
+# ==========================================
+GITHUB_TOKEN = "ghp_xxxxxxxxxxxxxxxxxxxx"  # Step 2で取得したGitHubトークン
+GITHUB_REPO_NAME = "ユーザー名/my-html-tools" # GitHubの「ユーザー名/リポジトリ名」
+NETLIFY_SITE_URL = "https://xxxx.netlify.app" # Netlifyで割り当てられたWebサイトURL
+
+def push_to_github(html_content):
+    """GitHubへindex.htmlを書き込んでPushする関数"""
+    g = Github(GITHUB_TOKEN)
+    repo = g.get_repo(GITHUB_REPO_NAME)
+    file_path = "index.html"
+
+    try:
+        # 既存のindex.htmlを取得して上書き
+        contents = repo.get_contents(file_path)
+        repo.update_file(
+            path=file_path,
+            message="Update via HTML Deployer App",
+            content=html_content,
+            sha=contents.sha
+        )
+    except GithubException as e:
+        if e.status == 404:
+            # まだindex.htmlが存在しない場合は新規作成
+            repo.create_file(
+                path=file_path,
+                message="Initial commit via HTML Deployer App",
+                content=html_content
+            )
+        else:
+            raise e
+
+def on_deploy():
+    html_code = text_input.get("1.0", tk.END).strip()
+    if not html_code:
+        messagebox.showwarning("警告", "HTMLコードを入力してください。")
+        return
+
+    btn_deploy.config(state=tk.DISABLED, text="公開処理中...")
+    root.update()
+
+    try:
+        # 1. GitHubへコードを自動Push（Netlifyが自動で検知して公開）
+        push_to_github(html_code)
+        
+        # 2. 公開URLを表示
+        entry_url.delete(0, tk.END)
+        entry_url.insert(0, NETLIFY_SITE_URL)
+
+        # 3. スマホ読取用QRコードの生成・表示
+        qr_img = qrcode.make(NETLIFY_SITE_URL).resize((180, 180))
+        tk_qr = ImageTk.PhotoImage(qr_img)
+        lbl_qr.config(image=tk_qr, text="")
+        lbl_qr.image = tk_qr  # 参照保持
+
+        messagebox.showinfo("成功", "GitHubへの送信が完了しました！\n数秒〜十数秒でNetlifyに反映されます。")
+
+    except Exception as e:
+        messagebox.showerror("エラー", f"処理に失敗しました:\n{str(e)}")
+    finally:
+        btn_deploy.config(state=tk.NORMAL, text="Webサイト化して全自動公開")
+
+# --- GUI 画面構築 (tkinter) ---
+root = tk.Tk()
+root.title("HTML Instant Web Deployer")
+root.geometry("600x700")
+
+# HTML入力エリア
+lbl_input = tk.Label(root, text="AIが生成したHTMLコードを貼り付けてください:")
+lbl_input.pack(anchor="w", padx=10, pady=(10, 0))
+
+text_input = tk.Text(root, height=15)
+text_input.pack(fill="both", expand=True, padx=10, pady=5)
+
+# 実行ボタン
+btn_deploy = tk.Button(
+    root, 
+    text="Webサイト化して全自動公開", 
+    command=on_deploy, 
+    bg="#2da44e", 
+    fg="white", 
+    font=("Helvetica", 11, "bold"),
+    pady=8
+)
+btn_deploy.pack(fill="x", padx=10, pady=10)
+
+# 結果表示エリア（URL）
+lbl_result = tk.Label(root, text="WebサイトのURL:")
+lbl_result.pack(anchor="w", padx=10)
+
+entry_url = tk.Entry(root, font=("Helvetica", 11))
+entry_url.pack(fill="x", padx=10, pady=5)
+
+# QRコード表示エリア
+lbl_qr = tk.Label(root, text="（ここにスマホ読取用QRコードが表示されます）")
+lbl_qr.pack(pady=15)
+
+root.mainloop()
