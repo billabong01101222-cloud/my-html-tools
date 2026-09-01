@@ -1,107 +1,718 @@
-import os
-import base64
-import tkinter as tk
-from tkinter import messagebox
-from github import Github, GithubException
-import qrcode
-from PIL import Image, ImageTk
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>hiraganaandkatakana_mark2</title>
+  <style>
+    :root {
+      --bg-color: #f0f9ff;
+      --main-color: #ff6b81;
+      --accent-color: #ffda79;
+      --green-color: #2ed573;
+      --blue-color: #70a1ff;
+      --text-color: #2f3542;
+      --card-bg: #ffffff;
+    }
 
-# ==========================================
-# ★ 設定情報（ご自身の情報に書き換えてください）
-# ==========================================
-GITHUB_TOKEN = "ghp_xxxxxxxxxxxxxxxxxxxx"  # Step 2で取得したGitHubトークン
-GITHUB_REPO_NAME = "ユーザー名/my-html-tools" # GitHubの「ユーザー名/リポジトリ名」
-NETLIFY_SITE_URL = "https://xxxx.netlify.app" # Netlifyで割り当てられたWebサイトURL
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+    }
 
-def push_to_github(html_content):
-    """GitHubへindex.htmlを書き込んでPushする関数"""
-    g = Github(GITHUB_TOKEN)
-    repo = g.get_repo(GITHUB_REPO_NAME)
-    file_path = "index.html"
+    body {
+      margin: 0;
+      padding: 10px;
+      font-family: "M PLUS Rounded 1c", "Hiragino Maru Gothic ProN", "Yu Gothic", sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
 
-    try:
-        # 既存のindex.htmlを取得して上書き
-        contents = repo.get_contents(file_path)
-        repo.update_file(
-            path=file_path,
-            message="Update via HTML Deployer App",
-            content=html_content,
-            sha=contents.sha
-        )
-    except GithubException as e:
-        if e.status == 404:
-            # まだindex.htmlが存在しない場合は新規作成
-            repo.create_file(
-                path=file_path,
-                message="Initial commit via HTML Deployer App",
-                content=html_content
-            )
-        else:
-            raise e
+    /* ヘッダー・タイトル */
+    header {
+      text-align: center;
+      margin-bottom: 8px;
+    }
+    h1 {
+      margin: 2px 0;
+      font-size: 1.8rem;
+      color: #ff4757;
+      text-shadow: 2px 2px 0px #ffffff, 4px 4px 0px #ffeaa7;
+      letter-spacing: 1px;
+    }
+    .version-tag {
+      font-size: 0.8rem;
+      background: linear-gradient(45deg, #70a1ff, #ff78e1);
+      color: white;
+      padding: 3px 12px;
+      border-radius: 12px;
+      font-weight: bold;
+      display: inline-block;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+    }
 
-def on_deploy():
-    html_code = text_input.get("1.0", tk.END).strip()
-    if not html_code:
-        messagebox.showwarning("警告", "HTMLコードを入力してください。")
-        return
+    /* 切り替えボタン群 */
+    .controls-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: 100%;
+      max-width: 420px;
+      margin-bottom: 10px;
+    }
+    .btn-group {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+    }
+    button {
+      border: none;
+      padding: 8px 14px;
+      font-size: 0.95rem;
+      font-weight: bold;
+      border-radius: 20px;
+      cursor: pointer;
+      box-shadow: 0 4px 0 rgba(0,0,0,0.12);
+      transition: all 0.1s transform, 0.1s box-shadow;
+      font-family: inherit;
+    }
+    button:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 rgba(0,0,0,0.12);
+    }
+    .type-btn { background: #ffeaa7; color: #d35400; }
+    .type-btn.active { background: #ff9f43; color: #fff; }
+    
+    .mode-btn { background: #eccc68; color: #fff; }
+    .mode-btn[data-mode="trace"] { background: #a8e6cf; color: #10ac84; }
+    .mode-btn[data-mode="trace"].active { background: #10ac84; color: #fff; }
+    .mode-btn[data-mode="change"] { background: #ffd3b6; color: #ee5253; }
+    .mode-btn[data-mode="change"].active { background: #ee5253; color: #fff; }
+    .mode-btn[data-mode="test"] { background: #dcedc1; color: #222f3e; }
+    .mode-btn[data-mode="test"].active { background: #2e86de; color: #fff; }
 
-    btn_deploy.config(state=tk.DISABLED, text="公開処理中...")
-    root.update()
+    /* メインカードエリア */
+    .app-card {
+      background: var(--card-bg);
+      border-radius: 25px;
+      padding: 15px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+      width: 100%;
+      max-width: 420px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      border: 4px solid #fff;
+    }
 
-    try:
-        # 1. GitHubへコードを自動Push（Netlifyが自動で検知して公開）
-        push_to_github(html_code)
-        
-        # 2. 公開URLを表示
-        entry_url.delete(0, tk.END)
-        entry_url.insert(0, NETLIFY_SITE_URL)
+    /* 右上ガイド表示 */
+    .guide-box {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: #fff9e6;
+      border: 3px dashed #ff9f43;
+      border-radius: 18px;
+      padding: 6px 10px;
+      text-align: center;
+      min-width: 85px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+    .guide-title {
+      font-size: 0.65rem;
+      color: #ff9f43;
+      font-weight: bold;
+    }
+    .guide-icon {
+      font-size: 1.4rem;
+      margin: 1px 0;
+    }
+    .guide-flex {
+      display: flex;
+      justify-content: center;
+      align-items: baseline;
+      gap: 6px;
+    }
+    .guide-char {
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: #ff4757;
+    }
+    .guide-roma {
+      font-size: 0.9rem;
+      color: #2e86de;
+      font-weight: bold;
+    }
 
-        # 3. スマホ読取用QRコードの生成・表示
-        qr_img = qrcode.make(NETLIFY_SITE_URL).resize((180, 180))
-        tk_qr = ImageTk.PhotoImage(qr_img)
-        lbl_qr.config(image=tk_qr, text="")
-        lbl_qr.image = tk_qr  # 参照保持
+    /* お題テキスト */
+    .prompt-container {
+      margin-top: 5px;
+      text-align: center;
+      height: 65px;
+    }
+    .prompt-label {
+      font-size: 0.85rem;
+      color: #8395a7;
+      font-weight: bold;
+    }
+    .prompt-char-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .prompt-char {
+      font-size: 2.2rem;
+      font-weight: bold;
+      color: #2f3542;
+    }
+    .speaker-btn {
+      background: #ff7675;
+      color: white;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 3px 0 #d63031;
+    }
 
-        messagebox.showinfo("成功", "GitHubへの送信が完了しました！\n数秒〜十数秒でNetlifyに反映されます。")
+    /* キャンバスエリア */
+    .canvas-container {
+      position: relative;
+      width: 260px;
+      height: 260px;
+      margin: 8px 0;
+      border: 5px solid #ffda79;
+      border-radius: 20px;
+      background-color: #fafafa;
+      box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+      overflow: hidden;
+    }
+    /* 十字ガイド線 */
+    .canvas-container::before {
+      content: "";
+      position: absolute;
+      top: 50%; left: 0; right: 0;
+      border-top: 2px dashed #e0e0e0;
+      z-index: 0;
+    }
+    .canvas-container::after {
+      content: "";
+      position: absolute;
+      left: 50%; top: 0; bottom: 0;
+      border-left: 2px dashed #e0e0e0;
+      z-index: 0;
+    }
+    /* なぞり書き用の背景文字 */
+    .bg-guide-text {
+      position: absolute;
+      top: 0; left: 0;
+      width: 260px;
+      height: 260px;
+      line-height: 260px;
+      text-align: center;
+      font-size: 180px;
+      color: #e2e8f0;
+      font-weight: bold;
+      z-index: 1;
+      pointer-events: none;
+    }
+    canvas {
+      position: absolute;
+      top: 0; left: 0;
+      z-index: 2;
+      touch-action: none;
+      cursor: crosshair;
+    }
 
-    except Exception as e:
-        messagebox.showerror("エラー", f"処理に失敗しました:\n{str(e)}")
-    finally:
-        btn_deploy.config(state=tk.NORMAL, text="Webサイト化して全自動公開")
+    /* ペンの色選択 */
+    .color-palette {
+      display: flex;
+      gap: 10px;
+      margin: 4px 0;
+    }
+    .color-dot {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid white;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      transition: transform 0.1s;
+    }
+    .color-dot.active {
+      transform: scale(1.25);
+      border: 2px solid #2f3542;
+    }
 
-# --- GUI 画面構築 (tkinter) ---
-root = tk.Tk()
-root.title("HTML Instant Web Deployer")
-root.geometry("600x700")
+    /* アクションボタン */
+    .action-btns {
+      display: flex;
+      gap: 12px;
+      margin-top: 10px;
+      width: 100%;
+      justify-content: center;
+    }
+    .btn-clear { background: #ff6b6b; color: white; width: 100px; }
+    .btn-check { background: #10ac84; color: white; width: 130px; font-size: 1.1rem; }
+    .btn-next { background: #54a0ff; color: white; width: 100px; }
 
-# HTML入力エリア
-lbl_input = tk.Label(root, text="AIが生成したHTMLコードを貼り付けてください:")
-lbl_input.pack(anchor="w", padx=10, pady=(10, 0))
+    /* スコア表示 */
+    .score-board {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #ee5253;
+      margin-bottom: 2px;
+      background: #ffeaa7;
+      padding: 4px 15px;
+      border-radius: 15px;
+      display: none;
+    }
 
-text_input = tk.Text(root, height=15)
-text_input.pack(fill="both", expand=True, padx=10, pady=5)
+    /* 花丸ポップアップ・演出用オーバーレイ */
+    .overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      pointer-events: none;
+      z-index: 99;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .hanamaru-img {
+      font-size: 180px;
+      opacity: 0;
+      transform: scale(0.2) rotate(-20deg);
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .hanamaru-img.show {
+      opacity: 0.9;
+      transform: scale(1) rotate(0deg);
+    }
 
-# 実行ボタン
-btn_deploy = tk.Button(
-    root, 
-    text="Webサイト化して全自動公開", 
-    command=on_deploy, 
-    bg="#2da44e", 
-    fg="white", 
-    font=("Helvetica", 11, "bold"),
-    pady=8
-)
-btn_deploy.pack(fill="x", padx=10, pady=10)
+    /* 紙吹雪パーティクル */
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+      animation: fall 1.5s ease-out forwards;
+    }
+    @keyframes fall {
+      0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(600px) rotate(720deg); opacity: 0; }
+    }
+  </style>
+</head>
+<body>
 
-# 結果表示エリア（URL）
-lbl_result = tk.Label(root, text="WebサイトのURL:")
-lbl_result.pack(anchor="w", padx=10)
+  <header>
+    <h1>✨ もじれんしゅう 🌈</h1>
+    <span class="version-tag">hiraganaandkatakana_mark2</span>
+  </header>
 
-entry_url = tk.Entry(root, font=("Helvetica", 11))
-entry_url.pack(fill="x", padx=10, pady=5)
+  <!-- モード選択パネル -->
+  <div class="controls-panel">
+    <div class="btn-group">
+      <button class="type-btn active" onclick="setType('hira')">ひらがな</button>
+      <button class="type-btn" onclick="setType('kata')">かたかな</button>
+    </div>
+    <div class="btn-group">
+      <button class="mode-btn active" data-mode="trace" onclick="setMode('trace')">✏️ なぞる</button>
+      <button class="mode-btn" data-mode="change" onclick="setMode('change')">🔄 チェンジ</button>
+      <button class="mode-btn" data-mode="test" onclick="setMode('test')">💯 なんてんかな？</button>
+    </div>
+  </div>
 
-# QRコード表示エリア
-lbl_qr = tk.Label(root, text="（ここにスマホ読取用QRコードが表示されます）")
-lbl_qr.pack(pady=15)
+  <!-- メインカード -->
+  <div class="app-card">
+    <!-- 右上ガイド（絵、対の文字、ローマ字） -->
+    <div class="guide-box">
+      <div class="guide-title">ほかの かきかた</div>
+      <div class="guide-icon" id="guideIcon">🍎</div>
+      <div class="guide-flex">
+        <span class="guide-char" id="guideChar">ア</span>
+        <span class="guide-roma" id="guideRoma">a</span>
+      </div>
+    </div>
 
-root.mainloop()
+    <!-- スコア表示（テストモード用） -->
+    <div class="score-board" id="scoreBoard">
+      ぜんぶで: <span id="currentScore">0</span> / 46 もじ
+    </div>
+
+    <!-- お題指示 -->
+    <div class="prompt-container">
+      <div class="prompt-label" id="promptLabel">この もじを なぞってね！</div>
+      <div class="prompt-char-wrapper">
+        <div class="prompt-char" id="promptChar">あ</div>
+        <button class="speaker-btn" onclick="speakCurrentChar()">🔊</button>
+      </div>
+    </div>
+
+    <!-- キャンバス -->
+    <div class="canvas-container">
+      <div class="bg-guide-text" id="bgGuideText">あ</div>
+      <canvas id="writeCanvas" width="260" height="260"></canvas>
+    </div>
+
+    <!-- ペン色選び -->
+    <div class="color-palette">
+      <div class="color-dot active" style="background:#2f3542;" onclick="setPenColor('#2f3542', this)"></div>
+      <div class="color-dot" style="background:#ff4757;" onclick="setPenColor('#ff4757', this)"></div>
+      <div class="color-dot" style="background:#2e86de;" onclick="setPenColor('#2e86de', this)"></div>
+      <div class="color-dot" style="background:#10ac84;" onclick="setPenColor('#10ac84', this)"></div>
+      <div class="color-dot" style="background:#ff9f43;" onclick="setPenColor('#ff9f43', this)"></div>
+    </div>
+
+    <!-- 操作ボタン -->
+    <div class="action-btns">
+      <button class="btn-clear" onclick="clearCanvasWithSound()">けす</button>
+      <button class="btn-check" onclick="checkAndNext()">できた！ 💮</button>
+      <button class="btn-next" onclick="skipNext()">つぎ ➔</button>
+    </div>
+  </div>
+
+  <!-- 花丸演出用オーバーレイ -->
+  <div class="overlay" id="overlay">
+    <div class="hanamaru-img" id="hanamaru">💮</div>
+  </div>
+
+  <script>
+    // 50音データ（46文字 ＋ 絵文字 ＋ 単語例）
+    const gojuon = [
+      {h: "あ", k: "ア", r: "a", icon: "🍎"}, {h: "い", k: "イ", r: "i", icon: "🍓"}, {h: "う", k: "ウ", r: "u", icon: "🐰"}, {h: "え", k: "エ", r: "e", icon: "✏️"}, {h: "お", k: "オ", r: "o", icon: "🍙"},
+      {h: "か", k: "カ", r: "ka", icon: "🐸"}, {h: "き", k: "キ", r: "ki", icon: "🦒"}, {h: "く", k: "ク", r: "ku", icon: "🐻"}, {h: "け", k: "ケ", r: "ke", icon: "🎂"}, {h: "こ", k: "コ", r: "ko", icon: "🚀"},
+      {h: "さ", k: "サ", r: "sa", icon: "🐟"}, {h: "し", k: "シ", r: "shi", icon: "🦄"}, {h: "す", k: "ス", r: "su", icon: "🍉"}, {h: "せ", k: "セ", r: "se", icon: "🧼"}, {h: "そ", k: "ソ", r: "so", icon: "🍦"},
+      {h: "た", k: "タ", r: "ta", icon: "🐙"}, {h: "ち", k: "チ", r: "chi", icon: "🧀"}, {h: "つ", k: "ツ", r: "tsu", icon: "🌙"}, {h: "て", k: "テ", r: "te", icon: "🦋"}, {h: "と", k: "ト", r: "to", icon: "🐯"},
+      {h: "な", k: "ナ", r: "na", icon: "🍆"}, {h: "に", k: "ニ", r: "ni", icon: "🥕"}, {h: "ぬ", k: "ヌ", r: "nu", icon: "🧸"}, {h: "ね", k: "ネ", r: "ne", icon: "🐱"}, {h: "の", k: "ノ", r: "no", icon: "乗り物"},
+      {h: "は", k: "ハ", r: "ha", icon: "🌸"}, {h: "ひ", k: "ヒ", r: "hi", icon: "🐥"}, {h: "ふ", k: "フ", r: "fu", icon: "🎈"}, {h: "へ", k: "ヘ", r: "he", icon: "🐍"}, {h: "ほ", k: "ホ", r: "ho", icon: "⭐"},
+      {h: "ま", k: "マ", r: "ma", icon: "📣"}, {h: "み", k: "ミ", r: "mi", icon: "🐝"}, {h: "む", k: "ム", r: "mu", icon: "🐛"}, {h: "め", k: "メ", r: "me", icon: "👓"}, {h: "も", k: "モ", r: "mo", icon: "🍑"},
+      {h: "や", k: "ヤ", r: "ya", icon: "🌴"}, {h: "ゆ", k: "ユ", r: "yu", icon: "☃️"}, {h: "よ", k: "ヨ", r: "yo", icon: "⛵"},
+      {h: "ら", k: "ラ", r: "ra", icon: "📻"}, {h: "り", k: "リ", r: "ri", icon: "🍏"}, {h: "る", k: "ル", r: "ru", icon: "💍"}, {h: "れ", k: "レ", r: "re", icon: "🍋"}, {h: "ろ", k: "ロ", r: "ro", icon: "🤖"},
+      {h: "わ", k: "ワ", r: "wa", icon: "🐊"}, {h: "を", k: "ヲ", r: "wo", icon: "🐶"}, {h: "ん", k: "ン", r: "n", icon: "🔤"}
+    ];
+
+    let currentType = 'hira'; // 'hira' または 'kata'
+    let currentMode = 'trace'; // 'trace', 'change', 'test'
+    let currentIndex = 0;
+    let score = 0;
+    let isDrawing = false;
+    let strokeCount = 0;
+    let penColor = '#2f3542';
+
+    // Web Audio APIの初期化（サウンドエフェクト生成用）
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playSound(type) {
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      const now = audioCtx.currentTime;
+
+      if (type === 'click') {
+        osc.frequency.setValueAtTime(400, now);
+        osc.frequency.exponentialRampToValueAtTime(800, now + 0.05);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.linearRampToValueAtTime(0, now + 0.05);
+        osc.start(now);
+        osc.stop(now + 0.05);
+      } else if (type === 'clear') {
+        osc.frequency.setValueAtTime(600, now);
+        osc.frequency.linearRampToValueAtTime(200, now + 0.1);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.linearRampToValueAtTime(0, now + 0.1);
+        osc.start(now);
+        osc.stop(now + 0.1);
+      } else if (type === 'fanfare') {
+        // キラキラ正解ファンファーレ
+        const notes = [523.25, 659.25, 783.99, 1046.50]; // C, E, G, C
+        notes.forEach((freq, idx) => {
+          const noteOsc = audioCtx.createOscillator();
+          const noteGain = audioCtx.createGain();
+          noteOsc.connect(noteGain);
+          noteGain.connect(audioCtx.destination);
+          
+          noteOsc.frequency.setValueAtTime(freq, now + idx * 0.08);
+          noteGain.gain.setValueAtTime(0.2, now + idx * 0.08);
+          noteGain.gain.linearRampToValueAtTime(0, now + idx * 0.08 + 0.2);
+          
+          noteOsc.start(now + idx * 0.08);
+          noteOsc.stop(now + idx * 0.08 + 0.2);
+        });
+      }
+    }
+
+    // 音声読み上げ (SpeechSynthesis)
+    function speakText(text) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel(); // 前の音声をクリア
+        const uttr = new SpeechSynthesisUtterance(text);
+        uttr.lang = 'ja-JP';
+        uttr.rate = 0.9;
+        uttr.pitch = 1.2; // 少し高めでかわいらしい声に
+        window.speechSynthesis.speak(uttr);
+      }
+    }
+
+    // DOM要素
+    const canvas = document.getElementById('writeCanvas');
+    const ctx = canvas.getContext('2d');
+    const promptLabel = document.getElementById('promptLabel');
+    const promptChar = document.getElementById('promptChar');
+    const bgGuideText = document.getElementById('bgGuideText');
+    const guideIcon = document.getElementById('guideIcon');
+    const guideChar = document.getElementById('guideChar');
+    const guideRoma = document.getElementById('guideRoma');
+    const scoreBoard = document.getElementById('scoreBoard');
+    const currentScore = document.getElementById('currentScore');
+    const hanamaru = document.getElementById('hanamaru');
+
+    window.onload = () => {
+      setupCanvas();
+      updateView();
+    };
+
+    function setupCanvas() {
+      ctx.lineWidth = 14;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      // イベントリスナー
+      canvas.addEventListener('mousedown', startDrawing);
+      canvas.addEventListener('mousemove', draw);
+      canvas.addEventListener('mouseup', stopDrawing);
+      canvas.addEventListener('mouseleave', stopDrawing);
+
+      canvas.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        startDrawing(getTouchPos(e.touches[0]));
+      });
+      canvas.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        draw(getTouchPos(e.touches[0]));
+      });
+      canvas.addEventListener('touchend', stopDrawing);
+    }
+
+    function getTouchPos(touch) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: touch.clientX - rect.left,
+        y: touch.clientY - rect.top
+      };
+    }
+
+    function startDrawing(e) {
+      isDrawing = true;
+      strokeCount++;
+      const pos = e.x !== undefined ? e : getCanvasPos(e);
+      ctx.strokeStyle = penColor;
+      ctx.beginPath();
+      ctx.moveTo(pos.x, pos.y);
+    }
+
+    function draw(e) {
+      if (!isDrawing) return;
+      const pos = e.x !== undefined ? e : getCanvasPos(e);
+      ctx.lineTo(pos.x, pos.y);
+      ctx.stroke();
+    }
+
+    function stopDrawing() {
+      isDrawing = false;
+    }
+
+    function getCanvasPos(e) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      };
+    }
+
+    function setPenColor(color, el) {
+      playSound('click');
+      penColor = color;
+      document.querySelectorAll('.color-dot').forEach(dot => dot.classList.remove('active'));
+      el.classList.add('active');
+    }
+
+    function clearCanvas() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      strokeCount = 0;
+    }
+
+    function clearCanvasWithSound() {
+      playSound('clear');
+      clearCanvas();
+    }
+
+    // 表示の更新
+    function updateView() {
+      clearCanvas();
+      const item = gojuon[currentIndex];
+
+      scoreBoard.style.display = (currentMode === 'test') ? 'block' : 'none';
+      currentScore.innerText = score;
+
+      guideIcon.innerText = item.icon;
+      guideRoma.innerText = item.r;
+
+      if (currentMode === 'trace') {
+        promptLabel.innerText = "この もじを なぞってね！";
+        promptChar.innerText = (currentType === 'hira') ? item.h : item.k;
+        bgGuideText.innerText = promptChar.innerText;
+        bgGuideText.style.display = 'block';
+
+        guideChar.innerText = (currentType === 'hira') ? item.k : item.h;
+
+      } else if (currentMode === 'change') {
+        bgGuideText.style.display = 'none';
+        if (currentType === 'hira') {
+          promptLabel.innerText = "カタカナに チェンジして かこう！";
+          promptChar.innerText = item.h;
+          guideChar.innerText = item.k;
+        } else {
+          promptLabel.innerText = "ひらがなに チェンジして かこう！";
+          promptChar.innerText = item.k;
+          guideChar.innerText = item.h;
+        }
+
+      } else if (currentMode === 'test') {
+        bgGuideText.style.display = 'none';
+        promptLabel.innerText = "しっかり かけるかな？";
+        promptChar.innerText = (currentType === 'hira') ? item.h : item.k;
+        guideChar.innerText = (currentType === 'hira') ? item.k : item.h;
+      }
+
+      // 自動で文字をしゃべる
+      setTimeout(() => {
+        speakCurrentChar();
+      }, 200);
+    }
+
+    function speakCurrentChar() {
+      const item = gojuon[currentIndex];
+      const targetChar = (currentType === 'hira') ? item.h : item.k;
+      speakText(targetChar);
+    }
+
+    // 「できた！」ボタン（花丸＆アニメーション判定）
+    function checkAndNext() {
+      if (strokeCount < 2) {
+        speakText("文字を書いてみよう！");
+        return;
+      }
+
+      // 正解演出
+      playSound('fanfare');
+      showHanamaruAnimation();
+
+      if (currentMode === 'test') {
+        score++;
+        currentScore.innerText = score;
+      }
+
+      const compliments = ["すごい！", "天才！", "はなまる！", "かっこいい！", "その調子！"];
+      const randomCompliment = compliments[Math.floor(Math.random() * compliments.length)];
+      speakText(randomCompliment);
+
+      setTimeout(() => {
+        advanceNext();
+      }, 1200);
+    }
+
+    function skipNext() {
+      playSound('click');
+      advanceNext();
+    }
+
+    function advanceNext() {
+      if (currentIndex < gojuon.length - 1) {
+        currentIndex++;
+      } else {
+        if (currentMode === 'test') {
+          speakText(`すごーい！ 46文字中 ${score}文字 書けたよ！`);
+          alert(`🎉 クリア！ 46文字中 ${score} 文字 書けました！💯`);
+          score = 0;
+        } else {
+          speakText("ぜんぶ 書けたね！ おめでとう！");
+        }
+        currentIndex = 0;
+      }
+      updateView();
+    }
+
+    // 花丸＆紙吹雪アニメーション
+    function showHanamaruAnimation() {
+      hanamaru.classList.add('show');
+      createConfetti();
+
+      setTimeout(() => {
+        hanamaru.classList.remove('show');
+      }, 1000);
+    }
+
+    function createConfetti() {
+      const colors = ['#ff4757', '#2e86de', '#2ed573', '#ffa502', '#ff78e1'];
+      for (let i = 0; i < 30; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.left = Math.random() * 100 + 'vw';
+        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        confetti.style.animationDelay = Math.random() * 0.3 + 's';
+        document.body.appendChild(confetti);
+
+        setTimeout(() => confetti.remove(), 1500);
+      }
+    }
+
+    // ボタン切り替え処理
+    function setType(type) {
+      playSound('click');
+      currentType = type;
+      document.querySelectorAll('.type-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      currentIndex = 0;
+      score = 0;
+      updateView();
+    }
+
+    function setMode(mode) {
+      playSound('click');
+      currentMode = mode;
+      document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      currentIndex = 0;
+      score = 0;
+      updateView();
+    }
+  </script>
+</body>
+</html>
+```eof
+
+新しいコードを生成しました！上記のコードをHTMLファイル（例: `hiraganaandkatakana_mark2.html`）として保存し、ブラウザで開いてお試しいただけます。
+
+### 追加されたお楽しみ要素
+1. **「できた！ 💮」ボタン**: 文字を書いて「できた！」を押すと、Web Audioによる華やかなサウンドと一緒に**大きな花丸💮と紙吹雪**が舞い上がります。
+2. **自動音声読み上げ 🔊**: 文字が切り替わった時やスピーカーアイコンを押した時に、「あ！」「すごーい！」「花丸！」と可愛い声で励ましてくれます。
+3. **絵文字ガイド 🍎**: 右上に「🍎（あ）」「🍓（い）」などの絵文字が表示され、視覚的に楽しく学習を進められます。
+4. **カラフルペン 🎨**: 下部のパレットから好きな色を選んで文字を書くことができます。
