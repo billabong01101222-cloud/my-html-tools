@@ -1,718 +1,2065 @@
 <!DOCTYPE html>
+
 <html lang="ja">
+
 <head>
+
   <meta charset="UTF-8">
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>hiraganaandkatakana_mark2</title>
+
+  <title>健康記録ノート</title>
+
   <style>
+
     :root {
-      --bg-color: #f0f9ff;
-      --main-color: #ff6b81;
-      --accent-color: #ffda79;
-      --green-color: #2ed573;
-      --blue-color: #70a1ff;
-      --text-color: #2f3542;
+
+      --primary-color: #2e7d32;
+
+      --primary-light: #e8f5e9;
+
+      --primary-hover: #1b5e20;
+
+      --accent-color: #66bb6a;
+
+      --bg-color: #f4f6f4;
+
       --card-bg: #ffffff;
+
+      --text-main: #2c3e50;
+
+      --text-sub: #607d8b;
+
+      --border-color: #e0e6ed;
+
+      --shadow-sm: 0 4px 12px rgba(46, 125, 50, 0.08);
+
+      --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.06);
+
     }
+
+
 
     * {
+
       box-sizing: border-box;
-      user-select: none;
-      -webkit-user-select: none;
+
+      margin: 0;
+
+      padding: 0;
+
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
     }
+
+
 
     body {
-      margin: 0;
-      padding: 10px;
-      font-family: "M PLUS Rounded 1c", "Hiragino Maru Gothic ProN", "Yu Gothic", sans-serif;
+
       background-color: var(--bg-color);
-      color: var(--text-color);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
-      overflow-x: hidden;
+
+      color: var(--text-main);
+
+      line-height: 1.6;
+
+      padding-bottom: 50px;
+
     }
 
-    /* ヘッダー・タイトル */
+
+
+    /* ヘッダー */
+
     header {
-      text-align: center;
-      margin-bottom: 8px;
-    }
-    h1 {
-      margin: 2px 0;
-      font-size: 1.8rem;
-      color: #ff4757;
-      text-shadow: 2px 2px 0px #ffffff, 4px 4px 0px #ffeaa7;
-      letter-spacing: 1px;
-    }
-    .version-tag {
-      font-size: 0.8rem;
-      background: linear-gradient(45deg, #70a1ff, #ff78e1);
-      color: white;
-      padding: 3px 12px;
-      border-radius: 12px;
-      font-weight: bold;
-      display: inline-block;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+
+      background: linear-gradient(135deg, #2e7d32, #388e3c);
+
+      color: #ffffff;
+
+      padding: 18px 20px;
+
+      display: flex;
+
+      justify-content: space-between;
+
+      align-items: center;
+
+      box-shadow: var(--shadow-sm);
+
+      position: sticky;
+
+      top: 0;
+
+      z-index: 100;
+
     }
 
-    /* 切り替えボタン群 */
-    .controls-panel {
+
+
+    header h1 {
+
+      font-size: 1.25rem;
+
+      font-weight: 700;
+
+      letter-spacing: 0.5px;
+
       display: flex;
-      flex-direction: column;
+
+      align-items: center;
+
       gap: 8px;
-      width: 100%;
-      max-width: 420px;
-      margin-bottom: 10px;
+
     }
-    .btn-group {
-      display: flex;
-      justify-content: center;
-      gap: 6px;
-    }
-    button {
+
+
+
+    .settings-btn {
+
+      background: rgba(255, 255, 255, 0.2);
+
       border: none;
-      padding: 8px 14px;
-      font-size: 0.95rem;
-      font-weight: bold;
-      border-radius: 20px;
-      cursor: pointer;
-      box-shadow: 0 4px 0 rgba(0,0,0,0.12);
-      transition: all 0.1s transform, 0.1s box-shadow;
-      font-family: inherit;
-    }
-    button:active {
-      transform: translateY(3px);
-      box-shadow: 0 1px 0 rgba(0,0,0,0.12);
-    }
-    .type-btn { background: #ffeaa7; color: #d35400; }
-    .type-btn.active { background: #ff9f43; color: #fff; }
-    
-    .mode-btn { background: #eccc68; color: #fff; }
-    .mode-btn[data-mode="trace"] { background: #a8e6cf; color: #10ac84; }
-    .mode-btn[data-mode="trace"].active { background: #10ac84; color: #fff; }
-    .mode-btn[data-mode="change"] { background: #ffd3b6; color: #ee5253; }
-    .mode-btn[data-mode="change"].active { background: #ee5253; color: #fff; }
-    .mode-btn[data-mode="test"] { background: #dcedc1; color: #222f3e; }
-    .mode-btn[data-mode="test"].active { background: #2e86de; color: #fff; }
 
-    /* メインカードエリア */
-    .app-card {
-      background: var(--card-bg);
-      border-radius: 25px;
-      padding: 15px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-      width: 100%;
-      max-width: 420px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      position: relative;
-      border: 4px solid #fff;
-    }
-
-    /* 右上ガイド表示 */
-    .guide-box {
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      background: #fff9e6;
-      border: 3px dashed #ff9f43;
-      border-radius: 18px;
-      padding: 6px 10px;
-      text-align: center;
-      min-width: 85px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-    }
-    .guide-title {
-      font-size: 0.65rem;
-      color: #ff9f43;
-      font-weight: bold;
-    }
-    .guide-icon {
-      font-size: 1.4rem;
-      margin: 1px 0;
-    }
-    .guide-flex {
-      display: flex;
-      justify-content: center;
-      align-items: baseline;
-      gap: 6px;
-    }
-    .guide-char {
-      font-size: 1.3rem;
-      font-weight: bold;
-      color: #ff4757;
-    }
-    .guide-roma {
-      font-size: 0.9rem;
-      color: #2e86de;
-      font-weight: bold;
-    }
-
-    /* お題テキスト */
-    .prompt-container {
-      margin-top: 5px;
-      text-align: center;
-      height: 65px;
-    }
-    .prompt-label {
-      font-size: 0.85rem;
-      color: #8395a7;
-      font-weight: bold;
-    }
-    .prompt-char-wrapper {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
-    .prompt-char {
-      font-size: 2.2rem;
-      font-weight: bold;
-      color: #2f3542;
-    }
-    .speaker-btn {
-      background: #ff7675;
       color: white;
-      border-radius: 50%;
-      width: 32px;
-      height: 32px;
-      padding: 0;
-      font-size: 0.9rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 3px 0 #d63031;
-    }
 
-    /* キャンバスエリア */
-    .canvas-container {
-      position: relative;
-      width: 260px;
-      height: 260px;
-      margin: 8px 0;
-      border: 5px solid #ffda79;
-      border-radius: 20px;
-      background-color: #fafafa;
-      box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
-      overflow: hidden;
-    }
-    /* 十字ガイド線 */
-    .canvas-container::before {
-      content: "";
-      position: absolute;
-      top: 50%; left: 0; right: 0;
-      border-top: 2px dashed #e0e0e0;
-      z-index: 0;
-    }
-    .canvas-container::after {
-      content: "";
-      position: absolute;
-      left: 50%; top: 0; bottom: 0;
-      border-left: 2px dashed #e0e0e0;
-      z-index: 0;
-    }
-    /* なぞり書き用の背景文字 */
-    .bg-guide-text {
-      position: absolute;
-      top: 0; left: 0;
-      width: 260px;
-      height: 260px;
-      line-height: 260px;
-      text-align: center;
-      font-size: 180px;
-      color: #e2e8f0;
-      font-weight: bold;
-      z-index: 1;
-      pointer-events: none;
-    }
-    canvas {
-      position: absolute;
-      top: 0; left: 0;
-      z-index: 2;
-      touch-action: none;
-      cursor: crosshair;
-    }
+      font-size: 1.2rem;
 
-    /* ペンの色選択 */
-    .color-palette {
-      display: flex;
-      gap: 10px;
-      margin: 4px 0;
-    }
-    .color-dot {
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
       cursor: pointer;
-      border: 2px solid white;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-      transition: transform 0.1s;
-    }
-    .color-dot.active {
-      transform: scale(1.25);
-      border: 2px solid #2f3542;
-    }
 
-    /* アクションボタン */
-    .action-btns {
+      width: 38px;
+
+      height: 38px;
+
+      border-radius: 50%;
+
       display: flex;
-      gap: 12px;
-      margin-top: 10px;
-      width: 100%;
-      justify-content: center;
-    }
-    .btn-clear { background: #ff6b6b; color: white; width: 100px; }
-    .btn-check { background: #10ac84; color: white; width: 130px; font-size: 1.1rem; }
-    .btn-next { background: #54a0ff; color: white; width: 100px; }
 
-    /* スコア表示 */
-    .score-board {
-      font-size: 1.1rem;
-      font-weight: bold;
-      color: #ee5253;
-      margin-bottom: 2px;
-      background: #ffeaa7;
-      padding: 4px 15px;
-      border-radius: 15px;
-      display: none;
-    }
-
-    /* 花丸ポップアップ・演出用オーバーレイ */
-    .overlay {
-      position: fixed;
-      top: 0; left: 0; width: 100vw; height: 100vh;
-      pointer-events: none;
-      z-index: 99;
-      display: flex;
       align-items: center;
+
       justify-content: center;
-    }
-    .hanamaru-img {
-      font-size: 180px;
-      opacity: 0;
-      transform: scale(0.2) rotate(-20deg);
-      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-    .hanamaru-img.show {
-      opacity: 0.9;
-      transform: scale(1) rotate(0deg);
+
+      transition: background 0.2s;
+
     }
 
-    /* 紙吹雪パーティクル */
-    .confetti {
-      position: absolute;
-      width: 10px;
-      height: 10px;
-      border-radius: 3px;
-      animation: fall 1.5s ease-out forwards;
+
+
+    .settings-btn:hover {
+
+      background: rgba(255, 255, 255, 0.3);
+
     }
-    @keyframes fall {
-      0% { transform: translateY(-100px) rotate(0deg); opacity: 1; }
-      100% { transform: translateY(600px) rotate(720deg); opacity: 0; }
+
+
+
+    /* コンテナ */
+
+    .container {
+
+      max-width: 650px;
+
+      margin: 0 auto;
+
+      padding: 20px 16px;
+
     }
+
+
+
+    /* カードデザイン */
+
+    .card {
+
+      background-color: var(--card-bg);
+
+      border-radius: 16px;
+
+      padding: 24px;
+
+      margin-bottom: 24px;
+
+      box-shadow: var(--shadow-md);
+
+      border: 1px solid rgba(224, 230, 237, 0.6);
+
+    }
+
+
+
+    .card-title {
+
+      font-size: 1.15rem;
+
+      font-weight: 700;
+
+      margin-bottom: 18px;
+
+      display: flex;
+
+      align-items: center;
+
+      justify-content: space-between;
+
+      color: var(--primary-color);
+
+      border-bottom: 2px solid var(--primary-light);
+
+      padding-bottom: 8px;
+
+    }
+
+
+
+    .card-title-text {
+
+      display: flex;
+
+      align-items: center;
+
+      gap: 10px;
+
+    }
+
+
+
+    /* フォーム */
+
+    .form-group {
+
+      margin-bottom: 18px;
+
+    }
+
+
+
+    .form-group label {
+
+      display: block;
+
+      font-size: 0.88rem;
+
+      font-weight: 600;
+
+      margin-bottom: 6px;
+
+      color: var(--text-sub);
+
+    }
+
+
+
+    .form-control {
+
+      width: 100%;
+
+      padding: 12px 14px;
+
+      font-size: 1rem;
+
+      border: 1.5px solid var(--border-color);
+
+      border-radius: 10px;
+
+      outline: none;
+
+      background-color: #fafcfb;
+
+      transition: all 0.2s ease;
+
+    }
+
+
+
+    .form-control:focus {
+
+      border-color: var(--accent-color);
+
+      background-color: #ffffff;
+
+      box-shadow: 0 0 0 3px rgba(102, 187, 106, 0.2);
+
+    }
+
+
+
+    .input-row-3 {
+
+      display: grid;
+
+      grid-template-columns: 1fr 1fr 1fr;
+
+      gap: 10px;
+
+    }
+
+
+
+    .input-row-2 {
+
+      display: grid;
+
+      grid-template-columns: 1fr 1fr;
+
+      gap: 12px;
+
+    }
+
+
+
+    .btn {
+
+      display: block;
+
+      width: 100%;
+
+      padding: 14px;
+
+      background: linear-gradient(135deg, #4caf50, #2e7d32);
+
+      color: white;
+
+      border: none;
+
+      border-radius: 12px;
+
+      font-size: 1.1rem;
+
+      font-weight: 700;
+
+      cursor: pointer;
+
+      box-shadow: 0 4px 12px rgba(46, 125, 50, 0.2);
+
+      transition: all 0.2s ease;
+
+      margin-top: 8px;
+
+    }
+
+
+
+    .btn:hover {
+
+      background: linear-gradient(135deg, #43a047, #1b5e20);
+
+      transform: translateY(-1px);
+
+    }
+
+
+
+    /* 音声入力ボタン関連 */
+
+    .voice-btn-container {
+
+      display: flex;
+
+      flex-direction: column;
+
+      align-items: flex-end;
+
+      gap: 2px;
+
+    }
+
+
+
+    .voice-all-btn {
+
+      background: #e8f5e9;
+
+      color: #2e7d32;
+
+      border: 1px solid #a5d6a7;
+
+      padding: 6px 12px;
+
+      border-radius: 20px;
+
+      font-size: 0.85rem;
+
+      font-weight: 600;
+
+      cursor: pointer;
+
+      display: flex;
+
+      align-items: center;
+
+      gap: 4px;
+
+      transition: all 0.2s;
+
+      user-select: none;
+
+      -webkit-user-select: none;
+
+    }
+
+
+
+    .voice-all-btn:hover {
+
+      background: #c8e6c9;
+
+    }
+
+
+
+    .voice-all-btn.recording {
+
+      background-color: #ffebee;
+
+      color: #e53935;
+
+      border-color: #ef9a9a;
+
+      animation: pulse 1.2s infinite;
+
+    }
+
+
+
+    .voice-note {
+
+      font-size: 0.72rem;
+
+      color: var(--text-sub);
+
+      font-weight: 500;
+
+    }
+
+
+
+    @keyframes pulse {
+
+      0% { transform: scale(1); }
+
+      50% { transform: scale(1.03); }
+
+      100% { transform: scale(1); }
+
+    }
+
+
+
+    .voice-status {
+
+      font-size: 0.8rem;
+
+      color: #e53935;
+
+      margin-top: 4px;
+
+      display: none;
+
+      font-weight: 600;
+
+    }
+
+
+
+    /* フィルターエリア */
+
+    .filter-header {
+
+      display: flex;
+
+      justify-content: space-between;
+
+      align-items: center;
+
+      margin-bottom: 18px;
+
+      flex-wrap: wrap;
+
+      gap: 10px;
+
+    }
+
+
+
+    .select-group {
+
+      display: flex;
+
+      gap: 8px;
+
+    }
+
+
+
+    .select-control {
+
+      padding: 8px 14px;
+
+      font-size: 0.95rem;
+
+      font-weight: 700;
+
+      border-radius: 10px;
+
+      border: 1.5px solid var(--border-color);
+
+      background-color: #ffffff;
+
+      color: var(--text-main);
+
+      cursor: pointer;
+
+      outline: none;
+
+    }
+
+
+
+    /* サマリー */
+
+    .monthly-summary {
+
+      background-color: var(--primary-light);
+
+      border-radius: 12px;
+
+      padding: 16px;
+
+      margin-bottom: 20px;
+
+      display: grid;
+
+      grid-template-columns: repeat(3, 1fr);
+
+      gap: 12px;
+
+      text-align: center;
+
+    }
+
+
+
+    .summary-item .label {
+
+      font-size: 0.75rem;
+
+      color: var(--text-sub);
+
+      font-weight: 600;
+
+      margin-bottom: 2px;
+
+    }
+
+
+
+    .summary-item .value {
+
+      font-size: 1.05rem;
+
+      font-weight: 700;
+
+      color: var(--primary-color);
+
+    }
+
+
+
+    /* 月間カレンダー・日別集計テーブル */
+
+    .monthly-table-wrapper {
+
+      overflow-x: auto;
+
+      margin-top: 10px;
+
+    }
+
+
+
+    .monthly-table {
+
+      width: 100%;
+
+      border-collapse: collapse;
+
+      font-size: 0.88rem;
+
+    }
+
+
+
+    .monthly-table th, .monthly-table td {
+
+      padding: 10px 8px;
+
+      text-align: center;
+
+      border-bottom: 1px solid var(--border-color);
+
+    }
+
+
+
+    .monthly-table th {
+
+      background-color: #f8faf8;
+
+      color: var(--text-sub);
+
+      font-weight: 700;
+
+      font-size: 0.8rem;
+
+    }
+
+
+
+    .monthly-table td.date-cell {
+
+      font-weight: 700;
+
+      color: var(--text-main);
+
+      background-color: #fafcfb;
+
+    }
+
+
+
+    /* 記録リスト（最下部一覧） */
+
+    .record-list {
+
+      list-style: none;
+
+    }
+
+
+
+    .record-item {
+
+      display: flex;
+
+      justify-content: space-between;
+
+      align-items: center;
+
+      padding: 14px 12px;
+
+      border-bottom: 1px solid var(--border-color);
+
+      border-radius: 8px;
+
+      transition: background 0.15s;
+
+    }
+
+
+
+    .record-item:hover {
+
+      background-color: #f9fbf9;
+
+    }
+
+
+
+    .record-item:last-child {
+
+      border-bottom: none;
+
+    }
+
+
+
+    .record-date {
+
+      font-size: 0.82rem;
+
+      color: var(--text-sub);
+
+      font-weight: 600;
+
+      margin-bottom: 3px;
+
+    }
+
+
+
+    .record-main-val {
+
+      font-size: 1.1rem;
+
+      font-weight: 700;
+
+      color: var(--text-main);
+
+    }
+
+
+
+    .record-sub-val {
+
+      font-size: 0.88rem;
+
+      color: #546e7a;
+
+      margin-top: 3px;
+
+    }
+
+
+
+    .record-unit {
+
+      font-size: 0.8rem;
+
+      font-weight: 400;
+
+      color: #90a4ae;
+
+    }
+
+
+
+    .photo-badge {
+
+      display: inline-block;
+
+      background-color: #e8f5e9;
+
+      color: #2e7d32;
+
+      font-size: 0.75rem;
+
+      font-weight: 600;
+
+      padding: 2px 8px;
+
+      border-radius: 12px;
+
+      margin-left: 6px;
+
+      cursor: pointer;
+
+    }
+
+
+
+    .delete-btn {
+
+      background: none;
+
+      border: none;
+
+      color: #cfd8dc;
+
+      cursor: pointer;
+
+      font-size: 1.2rem;
+
+      padding: 6px 10px;
+
+      border-radius: 6px;
+
+      transition: all 0.2s;
+
+    }
+
+
+
+    .delete-btn:hover {
+
+      color: #e53935;
+
+      background-color: #ffebee;
+
+    }
+
+
+
+    .empty-msg {
+
+      text-align: center;
+
+      color: var(--text-sub);
+
+      padding: 24px 0;
+
+      font-size: 0.95rem;
+
+    }
+
+
+
+    /* モーダル */
+
+    .modal {
+
+      display: none;
+
+      position: fixed;
+
+      top: 0;
+
+      left: 0;
+
+      width: 100%;
+
+      height: 100%;
+
+      background-color: rgba(0, 0, 0, 0.4);
+
+      backdrop-filter: blur(2px);
+
+      justify-content: center;
+
+      align-items: center;
+
+      z-index: 1000;
+
+    }
+
+
+
+    .modal-content {
+
+      background-color: #fff;
+
+      width: 90%;
+
+      max-width: 440px;
+
+      border-radius: 16px;
+
+      padding: 24px;
+
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+
+    }
+
+
+
+    .modal-header {
+
+      font-size: 1.2rem;
+
+      font-weight: 700;
+
+      margin-bottom: 18px;
+
+      color: var(--primary-color);
+
+    }
+
+
+
+    .modal-actions {
+
+      display: flex;
+
+      gap: 10px;
+
+      margin-top: 24px;
+
+    }
+
+
+
+    .btn-secondary {
+
+      background: #e0e0e0;
+
+      color: #424242;
+
+      box-shadow: none;
+
+    }
+
+
+
+    .img-preview {
+
+      max-width: 100%;
+
+      max-height: 300px;
+
+      border-radius: 8px;
+
+      margin-top: 10px;
+
+      display: block;
+
+    }
+
   </style>
+
 </head>
+
 <body>
 
+
+
+  <!-- ヘッダー -->
+
   <header>
-    <h1>✨ もじれんしゅう 🌈</h1>
-    <span class="version-tag">hiraganaandkatakana_mark2</span>
+
+    <h1 id="appTitle">🌱 座間の母_血圧記録ノート</h1>
+
+    <button class="settings-btn" id="openSettingsBtn" title="設定">⚙️</button>
+
   </header>
 
-  <!-- モード選択パネル -->
-  <div class="controls-panel">
-    <div class="btn-group">
-      <button class="type-btn active" onclick="setType('hira')">ひらがな</button>
-      <button class="type-btn" onclick="setType('kata')">かたかな</button>
-    </div>
-    <div class="btn-group">
-      <button class="mode-btn active" data-mode="trace" onclick="setMode('trace')">✏️ なぞる</button>
-      <button class="mode-btn" data-mode="change" onclick="setMode('change')">🔄 チェンジ</button>
-      <button class="mode-btn" data-mode="test" onclick="setMode('test')">💯 なんてんかな？</button>
-    </div>
-  </div>
 
-  <!-- メインカード -->
-  <div class="app-card">
-    <!-- 右上ガイド（絵、対の文字、ローマ字） -->
-    <div class="guide-box">
-      <div class="guide-title">ほかの かきかた</div>
-      <div class="guide-icon" id="guideIcon">🍎</div>
-      <div class="guide-flex">
-        <span class="guide-char" id="guideChar">ア</span>
-        <span class="guide-roma" id="guideRoma">a</span>
+
+  <div class="container">
+
+    <!-- 入力カード -->
+
+    <div class="card">
+
+      <div class="card-title">
+
+        <div class="card-title-text">📝 今日の記録を入力</div>
+
+        <div class="voice-btn-container">
+
+          <button type="button" class="voice-all-btn" id="voiceAllBtn" title="押している間録音">
+
+            🎤 まとめ音声入力
+
+          </button>
+
+          <span class="voice-note">※押している間録音</span>
+
+        </div>
+
       </div>
+
+
+
+      <div id="voiceStatus" class="voice-status">🎙️ 話している間ボタンを押し続けてください...</div>
+
+
+
+      <form id="bpForm">
+
+        <div class="form-group">
+
+          <label for="recordDate">日時</label>
+
+          <input type="datetime-local" id="recordDate" class="form-control" required>
+
+        </div>
+
+
+
+        <!-- 血圧・脈拍 -->
+
+        <div class="input-row-3 form-group">
+
+          <div>
+
+            <label for="sys">最高(上)</label>
+
+            <input type="number" id="sys" class="form-control" placeholder="120" required>
+
+          </div>
+
+          <div>
+
+            <label for="dia">最低(下)</label>
+
+            <input type="number" id="dia" class="form-control" placeholder="80" required>
+
+          </div>
+
+          <div>
+
+            <label for="pulse">脈拍</label>
+
+            <input type="number" id="pulse" class="form-control" placeholder="70" required>
+
+          </div>
+
+        </div>
+
+
+
+        <!-- 体温・体重 -->
+
+        <div class="input-row-2 form-group">
+
+          <div>
+
+            <label for="temp">🌡️ 体温 (℃)</label>
+
+            <input type="number" step="0.1" id="temp" class="form-control" placeholder="36.5">
+
+          </div>
+
+          <div>
+
+            <label for="weight">⚖️ 体重 (kg)</label>
+
+            <input type="number" step="0.1" id="weight" class="form-control" placeholder="60.0">
+
+          </div>
+
+        </div>
+
+
+
+        <!-- 過去データ用手書き写真追加 -->
+
+        <div class="form-group">
+
+          <label for="photoInput">📷 手書きノートの写真（任意）</label>
+
+          <input type="file" id="photoInput" accept="image/*" class="form-control">
+
+        </div>
+
+
+
+        <button type="submit" class="btn">記録を保存する</button>
+
+      </form>
+
     </div>
 
-    <!-- スコア表示（テストモード用） -->
-    <div class="score-board" id="scoreBoard">
-      ぜんぶで: <span id="currentScore">0</span> / 46 もじ
-    </div>
 
-    <!-- お題指示 -->
-    <div class="prompt-container">
-      <div class="prompt-label" id="promptLabel">この もじを なぞってね！</div>
-      <div class="prompt-char-wrapper">
-        <div class="prompt-char" id="promptChar">あ</div>
-        <button class="speaker-btn" onclick="speakCurrentChar()">🔊</button>
+
+    <!-- 集計サマリー・1ヶ月分結果表示カード -->
+
+    <div class="card">
+
+      <div class="filter-header">
+
+        <div class="card-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;">📊 月間集計・1ヶ月記録一覧</div>
+
+        <div class="select-group">
+
+          <select id="yearFilter" class="select-control"></select>
+
+          <select id="monthFilter" class="select-control"></select>
+
+        </div>
+
       </div>
+
+
+
+      <!-- 月間平均値 -->
+
+      <div class="monthly-summary" id="monthlySummary">
+
+        <div class="summary-item">
+
+          <div class="label">記録日数</div>
+
+          <div class="value" id="summaryDays">0日</div>
+
+        </div>
+
+        <div class="summary-item">
+
+          <div class="label">月平均血圧</div>
+
+          <div class="value" id="summaryBp">- / -</div>
+
+        </div>
+
+        <div class="summary-item">
+
+          <div class="label">月平均脈拍</div>
+
+          <div class="value" id="summaryPulse">-</div>
+
+        </div>
+
+        <div class="summary-item">
+
+          <div class="label">平均体温</div>
+
+          <div class="value" id="summaryTemp">- ℃</div>
+
+        </div>
+
+        <div class="summary-item" style="grid-column: span 2;">
+
+          <div class="label">平均体重</div>
+
+          <div class="value" id="summaryWeight">- kg</div>
+
+        </div>
+
+      </div>
+
+
+
+      <!-- 選択した月の1ヶ月分日別集計テーブル -->
+
+      <div class="monthly-table-wrapper">
+
+        <table class="monthly-table">
+
+          <thead>
+
+            <tr>
+
+              <th>日付</th>
+
+              <th>朝 (血圧/脈)</th>
+
+              <th>夜 (血圧/脈)</th>
+
+              <th>体温</th>
+
+              <th>体重</th>
+
+            </tr>
+
+          </thead>
+
+          <tbody id="monthlyTableBody">
+
+            <!-- JSで動的に挿入 -->
+
+          </tbody>
+
+        </table>
+
+      </div>
+
     </div>
 
-    <!-- キャンバス -->
-    <div class="canvas-container">
-      <div class="bg-guide-text" id="bgGuideText">あ</div>
-      <canvas id="writeCanvas" width="260" height="260"></canvas>
+
+
+    <!-- アプリ最下部：全履歴（タイムライン順） -->
+
+    <div class="card">
+
+      <div class="card-title">📖 全記録タイムライン</div>
+
+      <ul id="recordList" class="record-list">
+
+        <!-- JSで挿入 -->
+
+      </ul>
+
     </div>
 
-    <!-- ペン色選び -->
-    <div class="color-palette">
-      <div class="color-dot active" style="background:#2f3542;" onclick="setPenColor('#2f3542', this)"></div>
-      <div class="color-dot" style="background:#ff4757;" onclick="setPenColor('#ff4757', this)"></div>
-      <div class="color-dot" style="background:#2e86de;" onclick="setPenColor('#2e86de', this)"></div>
-      <div class="color-dot" style="background:#10ac84;" onclick="setPenColor('#10ac84', this)"></div>
-      <div class="color-dot" style="background:#ff9f43;" onclick="setPenColor('#ff9f43', this)"></div>
-    </div>
-
-    <!-- 操作ボタン -->
-    <div class="action-btns">
-      <button class="btn-clear" onclick="clearCanvasWithSound()">けす</button>
-      <button class="btn-check" onclick="checkAndNext()">できた！ 💮</button>
-      <button class="btn-next" onclick="skipNext()">つぎ ➔</button>
-    </div>
   </div>
 
-  <!-- 花丸演出用オーバーレイ -->
-  <div class="overlay" id="overlay">
-    <div class="hanamaru-img" id="hanamaru">💮</div>
+
+
+  <!-- 写真閲覧モーダル -->
+
+  <div class="modal" id="imageModal">
+
+    <div class="modal-content">
+
+      <div class="modal-header">📷 手書きノート写真</div>
+
+      <img id="modalImg" class="img-preview" src="" alt="手書きノート">
+
+      <div class="modal-actions">
+
+        <button class="btn" id="closeImageBtn">閉じる</button>
+
+      </div>
+
+    </div>
+
   </div>
+
+
+
+  <!-- 設定モーダル -->
+
+  <div class="modal" id="settingsModal">
+
+    <div class="modal-content">
+
+      <div class="modal-header">⚙️ アプリの設定</div>
+
+      <div class="form-group">
+
+        <label for="userNameInput">使用者名（ニックネーム）</label>
+
+        <input type="text" id="userNameInput" class="form-control" placeholder="座間の母">
+
+      </div>
+
+      <div class="modal-actions">
+
+        <button class="btn btn-secondary" id="closeSettingsBtn">キャンセル</button>
+
+        <button class="btn" id="saveSettingsBtn">保存する</button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
 
   <script>
-    // 50音データ（46文字 ＋ 絵文字 ＋ 単語例）
-    const gojuon = [
-      {h: "あ", k: "ア", r: "a", icon: "🍎"}, {h: "い", k: "イ", r: "i", icon: "🍓"}, {h: "う", k: "ウ", r: "u", icon: "🐰"}, {h: "え", k: "エ", r: "e", icon: "✏️"}, {h: "お", k: "オ", r: "o", icon: "🍙"},
-      {h: "か", k: "カ", r: "ka", icon: "🐸"}, {h: "き", k: "キ", r: "ki", icon: "🦒"}, {h: "く", k: "ク", r: "ku", icon: "🐻"}, {h: "け", k: "ケ", r: "ke", icon: "🎂"}, {h: "こ", k: "コ", r: "ko", icon: "🚀"},
-      {h: "さ", k: "サ", r: "sa", icon: "🐟"}, {h: "し", k: "シ", r: "shi", icon: "🦄"}, {h: "す", k: "ス", r: "su", icon: "🍉"}, {h: "せ", k: "セ", r: "se", icon: "🧼"}, {h: "そ", k: "ソ", r: "so", icon: "🍦"},
-      {h: "た", k: "タ", r: "ta", icon: "🐙"}, {h: "ち", k: "チ", r: "chi", icon: "🧀"}, {h: "つ", k: "ツ", r: "tsu", icon: "🌙"}, {h: "て", k: "テ", r: "te", icon: "🦋"}, {h: "と", k: "ト", r: "to", icon: "🐯"},
-      {h: "な", k: "ナ", r: "na", icon: "🍆"}, {h: "に", k: "ニ", r: "ni", icon: "🥕"}, {h: "ぬ", k: "ヌ", r: "nu", icon: "🧸"}, {h: "ね", k: "ネ", r: "ne", icon: "🐱"}, {h: "の", k: "ノ", r: "no", icon: "乗り物"},
-      {h: "は", k: "ハ", r: "ha", icon: "🌸"}, {h: "ひ", k: "ヒ", r: "hi", icon: "🐥"}, {h: "ふ", k: "フ", r: "fu", icon: "🎈"}, {h: "へ", k: "ヘ", r: "he", icon: "🐍"}, {h: "ほ", k: "ホ", r: "ho", icon: "⭐"},
-      {h: "ま", k: "マ", r: "ma", icon: "📣"}, {h: "み", k: "ミ", r: "mi", icon: "🐝"}, {h: "む", k: "ム", r: "mu", icon: "🐛"}, {h: "め", k: "メ", r: "me", icon: "👓"}, {h: "も", k: "モ", r: "mo", icon: "🍑"},
-      {h: "や", k: "ヤ", r: "ya", icon: "🌴"}, {h: "ゆ", k: "ユ", r: "yu", icon: "☃️"}, {h: "よ", k: "ヨ", r: "yo", icon: "⛵"},
-      {h: "ら", k: "ラ", r: "ra", icon: "📻"}, {h: "り", k: "リ", r: "ri", icon: "🍏"}, {h: "る", k: "ル", r: "ru", icon: "💍"}, {h: "れ", k: "レ", r: "re", icon: "🍋"}, {h: "ろ", k: "ロ", r: "ro", icon: "🤖"},
-      {h: "わ", k: "ワ", r: "wa", icon: "🐊"}, {h: "を", k: "ヲ", r: "wo", icon: "🐶"}, {h: "ん", k: "ン", r: "n", icon: "🔤"}
+
+    const STORAGE_KEY_RECORDS = 'bp_records_data';
+
+    const STORAGE_KEY_USER = 'bp_user_name';
+
+    const DEFAULT_USER_NAME = '座間の母';
+
+
+
+    // 初期サンプル過去データ
+
+    const initialDefaultData = [
+
+      { id: 1723680000000, date: '2026-08-15T08:00', sys: 132, dia: 85, pulse: 71, temp: 36.4, weight: 58.5, photo: null },
+
+      { id: 1723716000000, date: '2026-08-15T20:00', sys: 128, dia: 80, pulse: 68, temp: null, weight: null, photo: null },
+
+      { id: 1723766400000, date: '2026-08-16T08:00', sys: 135, dia: 88, pulse: 74, temp: 36.6, weight: 58.7, photo: null },
+
+      { id: 1723802400000, date: '2026-08-16T20:00', sys: 130, dia: 82, pulse: 70, temp: null, weight: null, photo: null }
+
     ];
 
-    let currentType = 'hira'; // 'hira' または 'kata'
-    let currentMode = 'trace'; // 'trace', 'change', 'test'
-    let currentIndex = 0;
-    let score = 0;
-    let isDrawing = false;
-    let strokeCount = 0;
-    let penColor = '#2f3542';
 
-    // Web Audio APIの初期化（サウンドエフェクト生成用）
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-    function playSound(type) {
-      if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
-      }
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
+    let records = JSON.parse(localStorage.getItem(STORAGE_KEY_RECORDS)) || initialDefaultData;
 
-      const now = audioCtx.currentTime;
+    let userName = localStorage.getItem(STORAGE_KEY_USER) || DEFAULT_USER_NAME;
 
-      if (type === 'click') {
-        osc.frequency.setValueAtTime(400, now);
-        osc.frequency.exponentialRampToValueAtTime(800, now + 0.05);
-        gain.gain.setValueAtTime(0.3, now);
-        gain.gain.linearRampToValueAtTime(0, now + 0.05);
-        osc.start(now);
-        osc.stop(now + 0.05);
-      } else if (type === 'clear') {
-        osc.frequency.setValueAtTime(600, now);
-        osc.frequency.linearRampToValueAtTime(200, now + 0.1);
-        gain.gain.setValueAtTime(0.3, now);
-        gain.gain.linearRampToValueAtTime(0, now + 0.1);
-        osc.start(now);
-        osc.stop(now + 0.1);
-      } else if (type === 'fanfare') {
-        // キラキラ正解ファンファーレ
-        const notes = [523.25, 659.25, 783.99, 1046.50]; // C, E, G, C
-        notes.forEach((freq, idx) => {
-          const noteOsc = audioCtx.createOscillator();
-          const noteGain = audioCtx.createGain();
-          noteOsc.connect(noteGain);
-          noteGain.connect(audioCtx.destination);
-          
-          noteOsc.frequency.setValueAtTime(freq, now + idx * 0.08);
-          noteGain.gain.setValueAtTime(0.2, now + idx * 0.08);
-          noteGain.gain.linearRampToValueAtTime(0, now + idx * 0.08 + 0.2);
-          
-          noteOsc.start(now + idx * 0.08);
-          noteOsc.stop(now + idx * 0.08 + 0.2);
-        });
-      }
+
+
+    const appTitle = document.getElementById('appTitle');
+
+    const bpForm = document.getElementById('bpForm');
+
+    const recordDateInput = document.getElementById('recordDate');
+
+    const photoInput = document.getElementById('photoInput');
+
+    const yearFilter = document.getElementById('yearFilter');
+
+    const monthFilter = document.getElementById('monthFilter');
+
+    const recordList = document.getElementById('recordList');
+
+    const monthlyTableBody = document.getElementById('monthlyTableBody');
+
+    
+
+    const summaryDays = document.getElementById('summaryDays');
+
+    const summaryBp = document.getElementById('summaryBp');
+
+    const summaryPulse = document.getElementById('summaryPulse');
+
+    const summaryTemp = document.getElementById('summaryTemp');
+
+    const summaryWeight = document.getElementById('summaryWeight');
+
+
+
+    const imageModal = document.getElementById('imageModal');
+
+    const modalImg = document.getElementById('modalImg');
+
+    const closeImageBtn = document.getElementById('closeImageBtn');
+
+
+
+    const settingsModal = document.getElementById('settingsModal');
+
+    const openSettingsBtn = document.getElementById('openSettingsBtn');
+
+    const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+
+    const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+
+    const userNameInput = document.getElementById('userNameInput');
+
+
+
+    const voiceStatus = document.getElementById('voiceStatus');
+
+    const voiceAllBtn = document.getElementById('voiceAllBtn');
+
+
+
+    function init() {
+
+      const now = new Date();
+
+      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+
+      recordDateInput.value = now.toISOString().slice(0, 16);
+
+
+
+      updateTitle();
+
+      setupFilters();
+
+      renderRecords();
+
     }
 
-    // 音声読み上げ (SpeechSynthesis)
-    function speakText(text) {
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel(); // 前の音声をクリア
-        const uttr = new SpeechSynthesisUtterance(text);
-        uttr.lang = 'ja-JP';
-        uttr.rate = 0.9;
-        uttr.pitch = 1.2; // 少し高めでかわいらしい声に
-        window.speechSynthesis.speak(uttr);
-      }
+
+
+    function updateTitle() {
+
+      appTitle.textContent = `🌱 ${userName}_血圧記録ノート`;
+
     }
 
-    // DOM要素
-    const canvas = document.getElementById('writeCanvas');
-    const ctx = canvas.getContext('2d');
-    const promptLabel = document.getElementById('promptLabel');
-    const promptChar = document.getElementById('promptChar');
-    const bgGuideText = document.getElementById('bgGuideText');
-    const guideIcon = document.getElementById('guideIcon');
-    const guideChar = document.getElementById('guideChar');
-    const guideRoma = document.getElementById('guideRoma');
-    const scoreBoard = document.getElementById('scoreBoard');
-    const currentScore = document.getElementById('currentScore');
-    const hanamaru = document.getElementById('hanamaru');
 
-    window.onload = () => {
-      setupCanvas();
-      updateView();
-    };
 
-    function setupCanvas() {
-      ctx.lineWidth = 14;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
+    function getBase64(file) {
 
-      // イベントリスナー
-      canvas.addEventListener('mousedown', startDrawing);
-      canvas.addEventListener('mousemove', draw);
-      canvas.addEventListener('mouseup', stopDrawing);
-      canvas.addEventListener('mouseleave', stopDrawing);
+      return new Promise((resolve, reject) => {
 
-      canvas.addEventListener('touchstart', (e) => {
-        e.preventDefault();
-        startDrawing(getTouchPos(e.touches[0]));
+        const reader = new FileReader();
+
+        reader.readAsDataURL(file);
+
+        reader.onload = () => resolve(reader.result);
+
+        reader.onerror = error => reject(error);
+
       });
-      canvas.addEventListener('touchmove', (e) => {
-        e.preventDefault();
-        draw(getTouchPos(e.touches[0]));
-      });
-      canvas.addEventListener('touchend', stopDrawing);
+
     }
 
-    function getTouchPos(touch) {
-      const rect = canvas.getBoundingClientRect();
-      return {
-        x: touch.clientX - rect.left,
-        y: touch.clientY - rect.top
-      };
-    }
 
-    function startDrawing(e) {
-      isDrawing = true;
-      strokeCount++;
-      const pos = e.x !== undefined ? e : getCanvasPos(e);
-      ctx.strokeStyle = penColor;
-      ctx.beginPath();
-      ctx.moveTo(pos.x, pos.y);
-    }
 
-    function draw(e) {
-      if (!isDrawing) return;
-      const pos = e.x !== undefined ? e : getCanvasPos(e);
-      ctx.lineTo(pos.x, pos.y);
-      ctx.stroke();
-    }
+    bpForm.addEventListener('submit', async (e) => {
 
-    function stopDrawing() {
-      isDrawing = false;
-    }
+      e.preventDefault();
 
-    function getCanvasPos(e) {
-      const rect = canvas.getBoundingClientRect();
-      return {
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top
-      };
-    }
+      
 
-    function setPenColor(color, el) {
-      playSound('click');
-      penColor = color;
-      document.querySelectorAll('.color-dot').forEach(dot => dot.classList.remove('active'));
-      el.classList.add('active');
-    }
+      let photoBase64 = null;
 
-    function clearCanvas() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      strokeCount = 0;
-    }
+      if (photoInput.files && photoInput.files[0]) {
 
-    function clearCanvasWithSound() {
-      playSound('clear');
-      clearCanvas();
-    }
+        try {
 
-    // 表示の更新
-    function updateView() {
-      clearCanvas();
-      const item = gojuon[currentIndex];
+          photoBase64 = await getBase64(photoInput.files[0]);
 
-      scoreBoard.style.display = (currentMode === 'test') ? 'block' : 'none';
-      currentScore.innerText = score;
+        } catch (err) {
 
-      guideIcon.innerText = item.icon;
-      guideRoma.innerText = item.r;
+          console.error("画像ロードエラー:", err);
 
-      if (currentMode === 'trace') {
-        promptLabel.innerText = "この もじを なぞってね！";
-        promptChar.innerText = (currentType === 'hira') ? item.h : item.k;
-        bgGuideText.innerText = promptChar.innerText;
-        bgGuideText.style.display = 'block';
-
-        guideChar.innerText = (currentType === 'hira') ? item.k : item.h;
-
-      } else if (currentMode === 'change') {
-        bgGuideText.style.display = 'none';
-        if (currentType === 'hira') {
-          promptLabel.innerText = "カタカナに チェンジして かこう！";
-          promptChar.innerText = item.h;
-          guideChar.innerText = item.k;
-        } else {
-          promptLabel.innerText = "ひらがなに チェンジして かこう！";
-          promptChar.innerText = item.k;
-          guideChar.innerText = item.h;
         }
 
-      } else if (currentMode === 'test') {
-        bgGuideText.style.display = 'none';
-        promptLabel.innerText = "しっかり かけるかな？";
-        promptChar.innerText = (currentType === 'hira') ? item.h : item.k;
-        guideChar.innerText = (currentType === 'hira') ? item.k : item.h;
       }
 
-      // 自動で文字をしゃべる
-      setTimeout(() => {
-        speakCurrentChar();
-      }, 200);
-    }
 
-    function speakCurrentChar() {
-      const item = gojuon[currentIndex];
-      const targetChar = (currentType === 'hira') ? item.h : item.k;
-      speakText(targetChar);
-    }
 
-    // 「できた！」ボタン（花丸＆アニメーション判定）
-    function checkAndNext() {
-      if (strokeCount < 2) {
-        speakText("文字を書いてみよう！");
-        return;
+      const newRecord = {
+
+        id: Date.now(),
+
+        date: recordDateInput.value,
+
+        sys: parseInt(document.getElementById('sys').value),
+
+        dia: parseInt(document.getElementById('dia').value),
+
+        pulse: parseInt(document.getElementById('pulse').value),
+
+        temp: document.getElementById('temp').value ? parseFloat(document.getElementById('temp').value) : null,
+
+        weight: document.getElementById('weight').value ? parseFloat(document.getElementById('weight').value) : null,
+
+        photo: photoBase64
+
+      };
+
+
+
+      records.unshift(newRecord);
+
+      saveRecords();
+
+
+
+      document.getElementById('sys').value = '';
+
+      document.getElementById('dia').value = '';
+
+      document.getElementById('pulse').value = '';
+
+      document.getElementById('temp').value = '';
+
+      document.getElementById('weight').value = '';
+
+      photoInput.value = '';
+
+
+
+      setupFilters();
+
+      renderRecords();
+
+    });
+
+
+
+    function deleteRecord(id) {
+
+      if (confirm('この記録を削除してもよろしいですか？')) {
+
+        records = records.filter(r => r.id !== id);
+
+        saveRecords();
+
+        setupFilters();
+
+        renderRecords();
+
       }
 
-      // 正解演出
-      playSound('fanfare');
-      showHanamaruAnimation();
+    }
 
-      if (currentMode === 'test') {
-        score++;
-        currentScore.innerText = score;
+
+
+    function viewPhoto(photoData) {
+
+      modalImg.src = photoData;
+
+      imageModal.style.display = 'flex';
+
+    }
+
+
+
+    closeImageBtn.addEventListener('click', () => {
+
+      imageModal.style.display = 'none';
+
+    });
+
+
+
+    function saveRecords() {
+
+      localStorage.setItem(STORAGE_KEY_RECORDS, JSON.stringify(records));
+
+    }
+
+
+
+    function setupFilters() {
+
+      const now = new Date();
+
+      const currentYear = now.getFullYear().toString();
+
+      const currentMonth = String(now.getMonth() + 1).padStart(2, '0');
+
+
+
+      const yearsSet = new Set([currentYear]);
+
+      records.forEach(r => {
+
+        if (r.date) yearsSet.add(r.date.slice(0, 4));
+
+      });
+
+
+
+      const sortedYears = Array.from(yearsSet).sort().reverse();
+
+
+
+      const prevSelectedYear = yearFilter.value;
+
+      yearFilter.innerHTML = '';
+
+      sortedYears.forEach(y => {
+
+        const option = document.createElement('option');
+
+        option.value = y;
+
+        option.textContent = `${y}年`;
+
+        yearFilter.appendChild(option);
+
+      });
+
+      yearFilter.value = (prevSelectedYear && sortedYears.includes(prevSelectedYear)) ? prevSelectedYear : currentYear;
+
+
+
+      if (monthFilter.options.length === 0) {
+
+        for (let m = 1; m <= 12; m++) {
+
+          const mStr = String(m).padStart(2, '0');
+
+          const option = document.createElement('option');
+
+          option.value = mStr;
+
+          option.textContent = `${m}月`;
+
+          monthFilter.appendChild(option);
+
+        }
+
+        monthFilter.value = currentMonth;
+
       }
 
-      const compliments = ["すごい！", "天才！", "はなまる！", "かっこいい！", "その調子！"];
-      const randomCompliment = compliments[Math.floor(Math.random() * compliments.length)];
-      speakText(randomCompliment);
-
-      setTimeout(() => {
-        advanceNext();
-      }, 1200);
     }
 
-    function skipNext() {
-      playSound('click');
-      advanceNext();
-    }
 
-    function advanceNext() {
-      if (currentIndex < gojuon.length - 1) {
-        currentIndex++;
+
+    yearFilter.addEventListener('change', renderRecords);
+
+    monthFilter.addEventListener('change', renderRecords);
+
+
+
+    function renderRecords() {
+
+      const selectedYear = parseInt(yearFilter.value);
+
+      const selectedMonth = parseInt(monthFilter.value);
+
+      const selectedYM = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}`;
+
+
+
+      const filteredRecords = records.filter(r => r.date && r.date.startsWith(selectedYM));
+
+
+
+      if (filteredRecords.length === 0) {
+
+        summaryDays.textContent = '0日';
+
+        summaryBp.textContent = '- / -';
+
+        summaryPulse.textContent = '-';
+
+        summaryTemp.textContent = '- ℃';
+
+        summaryWeight.textContent = '- kg';
+
       } else {
-        if (currentMode === 'test') {
-          speakText(`すごーい！ 46文字中 ${score}文字 書けたよ！`);
-          alert(`🎉 クリア！ 46文字中 ${score} 文字 書けました！💯`);
-          score = 0;
-        } else {
-          speakText("ぜんぶ 書けたね！ おめでとう！");
+
+        let totalSys = 0, totalDia = 0, totalPulse = 0;
+
+        let totalTemp = 0, tempCount = 0;
+
+        let totalWeight = 0, weightCount = 0;
+
+        const uniqueDays = new Set();
+
+
+
+        filteredRecords.forEach(r => {
+
+          totalSys += r.sys;
+
+          totalDia += r.dia;
+
+          totalPulse += r.pulse;
+
+          uniqueDays.add(r.date.slice(0, 10));
+
+
+
+          if (r.temp) { totalTemp += r.temp; tempCount++; }
+
+          if (r.weight) { totalWeight += r.weight; weightCount++; }
+
+        });
+
+
+
+        const count = filteredRecords.length;
+
+        summaryDays.textContent = `${uniqueDays.size}日`;
+
+        summaryBp.textContent = `${Math.round(totalSys / count)} / ${Math.round(totalDia / count)}`;
+
+        summaryPulse.textContent = `${Math.round(totalPulse / count)}`;
+
+        summaryTemp.textContent = tempCount > 0 ? `${(totalTemp / tempCount).toFixed(1)} ℃` : '- ℃';
+
+        summaryWeight.textContent = weightCount > 0 ? `${(totalWeight / weightCount).toFixed(1)} kg` : '- kg';
+
+      }
+
+
+
+      monthlyTableBody.innerHTML = '';
+
+      const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
+
+
+
+      for (let day = 1; day <= daysInMonth; day++) {
+
+        const dayStr = `${selectedYM}-${String(day).padStart(2, '0')}`;
+
+        const dayRecords = filteredRecords.filter(r => r.date.startsWith(dayStr));
+
+
+
+        let morningRec = null;
+
+        let eveningRec = null;
+
+        let temps = [];
+
+        let weights = [];
+
+
+
+        dayRecords.forEach(r => {
+
+          const hour = new Date(r.date).getHours();
+
+          if (hour < 12) {
+
+            if (!morningRec) morningRec = r;
+
+          } else {
+
+            if (!eveningRec) eveningRec = r;
+
+          }
+
+          if (r.temp) temps.push(r.temp);
+
+          if (r.weight) weights.push(r.weight);
+
+        });
+
+
+
+        if (dayRecords.length > 0) {
+
+          const morningText = morningRec ? `${morningRec.sys}/${morningRec.dia} (${morningRec.pulse})` : '-';
+
+          const eveningText = eveningRec ? `${eveningRec.sys}/${eveningRec.dia} (${eveningRec.pulse})` : '-';
+
+          const tempText = temps.length > 0 ? `${temps[0].toFixed(1)}℃` : '-';
+
+          const weightText = weights.length > 0 ? `${weights[0].toFixed(1)}kg` : '-';
+
+
+
+          const tr = document.createElement('tr');
+
+          tr.innerHTML = `
+
+            <td class="date-cell">${selectedMonth}/${day}</td>
+
+            <td>${morningText}</td>
+
+            <td>${eveningText}</td>
+
+            <td>${tempText}</td>
+
+            <td>${weightText}</td>
+
+          `;
+
+          monthlyTableBody.appendChild(tr);
+
         }
-        currentIndex = 0;
+
       }
-      updateView();
-    }
 
-    // 花丸＆紙吹雪アニメーション
-    function showHanamaruAnimation() {
-      hanamaru.classList.add('show');
-      createConfetti();
 
-      setTimeout(() => {
-        hanamaru.classList.remove('show');
-      }, 1000);
-    }
 
-    function createConfetti() {
-      const colors = ['#ff4757', '#2e86de', '#2ed573', '#ffa502', '#ff78e1'];
-      for (let i = 0; i < 30; i++) {
-        const confetti = document.createElement('div');
-        confetti.className = 'confetti';
-        confetti.style.left = Math.random() * 100 + 'vw';
-        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-        confetti.style.animationDelay = Math.random() * 0.3 + 's';
-        document.body.appendChild(confetti);
+      if (monthlyTableBody.children.length === 0) {
 
-        setTimeout(() => confetti.remove(), 1500);
+        monthlyTableBody.innerHTML = `<tr><td colspan="5" style="color:var(--text-sub); padding:16px;">${selectedMonth}月の記録データはありません</td></tr>`;
+
       }
+
+
+
+      recordList.innerHTML = '';
+
+      if (records.length === 0) {
+
+        recordList.innerHTML = '<div class="empty-msg">記録がありません</div>';
+
+        return;
+
+      }
+
+
+
+      const sortedAll = [...records].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      sortedAll.forEach(r => {
+
+        const d = new Date(r.date);
+
+        const dateStr = `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+
+
+
+        let subTextList = [];
+
+        if (r.temp) subTextList.push(`体温: ${r.temp.toFixed(1)}℃`);
+
+        if (r.weight) subTextList.push(`体重: ${r.weight.toFixed(1)}kg`);
+
+        const subTextHtml = subTextList.length > 0 ? `<div class="record-sub-val">${subTextList.join(' / ')}</div>` : '';
+
+
+
+        let photoBadgeHtml = '';
+
+        if (r.photo) {
+
+          photoBadgeHtml = `<span class="photo-badge" onclick="viewPhoto('${r.photo}')">📷 写真あり</span>`;
+
+        }
+
+
+
+        const li = document.createElement('li');
+
+        li.className = 'record-item';
+
+        li.innerHTML = `
+
+          <div>
+
+            <div class="record-date">${dateStr} ${photoBadgeHtml}</div>
+
+            <div class="record-main-val">
+
+              ${r.sys} / ${r.dia} <span class="record-unit">mmHg</span> &nbsp; ${r.pulse} <span class="record-unit">bpm</span>
+
+            </div>
+
+            ${subTextHtml}
+
+          </div>
+
+          <button class="delete-btn" onclick="deleteRecord(${r.id})" title="削除">✕</button>
+
+        `;
+
+        recordList.appendChild(li);
+
+      });
+
     }
 
-    // ボタン切り替え処理
-    function setType(type) {
-      playSound('click');
-      currentType = type;
-      document.querySelectorAll('.type-btn').forEach(btn => btn.classList.remove('active'));
-      event.target.classList.add('active');
-      currentIndex = 0;
-      score = 0;
-      updateView();
+
+
+    openSettingsBtn.addEventListener('click', () => {
+
+      userNameInput.value = userName;
+
+      settingsModal.style.display = 'flex';
+
+    });
+
+
+
+    closeSettingsBtn.addEventListener('click', () => {
+
+      settingsModal.style.display = 'none';
+
+    });
+
+
+
+    saveSettingsBtn.addEventListener('click', () => {
+
+      const inputVal = userNameInput.value.trim();
+
+      userName = inputVal || DEFAULT_USER_NAME;
+
+      localStorage.setItem(STORAGE_KEY_USER, userName);
+
+      updateTitle();
+
+      settingsModal.style.display = 'none';
+
+    });
+
+
+
+    window.addEventListener('click', (e) => {
+
+      if (e.target === settingsModal) settingsModal.style.display = 'none';
+
+      if (e.target === imageModal) imageModal.style.display = 'none';
+
+    });
+
+
+
+    /* --- 改修版：長押し録音処理（マイク許可ポップアップ割り込み対策付き） --- */
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    let recognition = null;
+
+    let isRecording = false;
+
+    let isMouseDown = false; // ボタンが押されているかどうかの状態を明示管理
+
+
+
+    if (SpeechRecognition) {
+
+      recognition = new SpeechRecognition();
+
+      recognition.lang = 'ja-JP';
+
+      recognition.interimResults = false;
+
+      recognition.continuous = true;
+
+
+
+      recognition.onresult = (e) => {
+
+        let fullTranscript = '';
+
+        for (let i = 0; i < e.results.length; i++) {
+
+          fullTranscript += e.results[i][0].transcript;
+
+        }
+
+        parseAndSetVoiceText(fullTranscript);
+
+      };
+
+
+
+      recognition.onerror = (e) => {
+
+        console.error('Speech recognition error', e);
+
+        stopVoiceRecording();
+
+      };
+
+
+
+      recognition.onend = () => {
+
+        if (isRecording) {
+
+          stopVoiceRecording();
+
+        }
+
+      };
+
     }
 
-    function setMode(mode) {
-      playSound('click');
-      currentMode = mode;
-      document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
-      event.target.classList.add('active');
-      currentIndex = 0;
-      score = 0;
-      updateView();
+
+
+    function startVoiceRecording(e) {
+
+      if (e) e.preventDefault();
+
+      if (!SpeechRecognition) {
+
+        alert('お使いのブラウザは音声入力に対応していません。');
+
+        return;
+
+      }
+
+      
+
+      isMouseDown = true;
+
+      if (isRecording) return;
+
+
+
+      isRecording = true;
+
+      voiceAllBtn.classList.add('recording');
+
+      voiceStatus.style.display = 'block';
+
+      voiceStatus.textContent = '🎙️ 話している間ボタンを押し続けてください...';
+
+
+
+      try {
+
+        recognition.start();
+
+      } catch (err) {
+
+        console.error("録音開始エラー:", err);
+
+      }
+
     }
+
+
+
+    function stopVoiceRecording(e) {
+
+      if (e) e.preventDefault();
+
+      isMouseDown = false;
+
+
+
+      // 録音中でなければ何もしない
+
+      if (!isRecording) return;
+
+
+
+      isRecording = false;
+
+      voiceAllBtn.classList.remove('recording');
+
+      voiceStatus.style.display = 'none';
+
+
+
+      try {
+
+        recognition.stop();
+
+      } catch (err) {
+
+        console.error("録音停止エラー:", err);
+
+      }
+
+    }
+
+
+
+    // マウス・タッチ操作イベントの設定
+
+    voiceAllBtn.addEventListener('mousedown', startVoiceRecording);
+
+    voiceAllBtn.addEventListener('mouseup', stopVoiceRecording);
+
+    
+
+    // ダイアログが出た際にmouseleaveで強制終了しないよう除外
+
+    voiceAllBtn.addEventListener('touchstart', startVoiceRecording);
+
+    voiceAllBtn.addEventListener('touchend', stopVoiceRecording);
+
+
+
+    // 画面外離脱時のケア
+
+    window.addEventListener('mouseup', () => {
+
+      if (isMouseDown) stopVoiceRecording();
+
+    });
+
+
+
+    function parseAndSetVoiceText(text) {
+
+      let normalized = text
+
+        .replace(/[０-９．]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xfee0))
+
+        .replace(/点|ドット/g, '.')
+
+        .replace(/一/g, '1').replace(/二/g, '2').replace(/三/g, '3')
+
+        .replace(/四/g, '4').replace(/五/g, '5').replace(/六/g, '6')
+
+        .replace(/七/g, '7').replace(/八/g, '8').replace(/九/g, '9').replace(/〇|ゼロ/g, '0');
+
+
+
+      const sysMatch = normalized.match(/(?:最高|上|うえ)[^\d.]*([\d.]+)/);
+
+      const diaMatch = normalized.match(/(?:最低|下|した)[^\d.]*([\d.]+)/);
+
+      const pulseMatch = normalized.match(/(?:脈拍|脈|みゃく)[^\d.]*([\d.]+)/);
+
+      const tempMatch = normalized.match(/(?:体温|たいおん)[^\d.]*([\d.]+)/);
+
+      const weightMatch = normalized.match(/(?:体重|たいじゅう)[^\d.]*([\d.]+)/);
+
+
+
+      let updated = false;
+
+
+
+      if (sysMatch) { document.getElementById('sys').value = sysMatch[1]; updated = true; }
+
+      if (diaMatch) { document.getElementById('dia').value = diaMatch[1]; updated = true; }
+
+      if (pulseMatch) { document.getElementById('pulse').value = pulseMatch[1]; updated = true; }
+
+      if (tempMatch) { document.getElementById('temp').value = tempMatch[1]; updated = true; }
+
+      if (weightMatch) { document.getElementById('weight').value = weightMatch[1]; updated = true; }
+
+
+
+      if (!updated) {
+
+        const nums = normalized.match(/[\d.]+/g);
+
+        if (nums && nums.length > 0) {
+
+          if (nums[0]) document.getElementById('sys').value = nums[0];
+
+          if (nums[1]) document.getElementById('dia').value = nums[1];
+
+          if (nums[2]) document.getElementById('pulse').value = nums[2];
+
+          if (nums[3]) document.getElementById('temp').value = nums[3];
+
+          if (nums[4]) document.getElementById('weight').value = nums[4];
+
+        } else {
+
+          alert(`「${text}」から数値を読み取れませんでした。`);
+
+        }
+
+      }
+
+    }
+
+
+
+    init();
+
   </script>
+
 </body>
+
 </html>
-```eof
-
-新しいコードを生成しました！上記のコードをHTMLファイル（例: `hiraganaandkatakana_mark2.html`）として保存し、ブラウザで開いてお試しいただけます。
-
-### 追加されたお楽しみ要素
-1. **「できた！ 💮」ボタン**: 文字を書いて「できた！」を押すと、Web Audioによる華やかなサウンドと一緒に**大きな花丸💮と紙吹雪**が舞い上がります。
-2. **自動音声読み上げ 🔊**: 文字が切り替わった時やスピーカーアイコンを押した時に、「あ！」「すごーい！」「花丸！」と可愛い声で励ましてくれます。
-3. **絵文字ガイド 🍎**: 右上に「🍎（あ）」「🍓（い）」などの絵文字が表示され、視覚的に楽しく学習を進められます。
-4. **カラフルペン 🎨**: 下部のパレットから好きな色を選んで文字を書くことができます。
